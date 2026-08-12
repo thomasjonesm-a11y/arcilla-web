@@ -23,16 +23,16 @@ export default function Home() {
       </header>
 
       <section className="mx-auto flex max-w-6xl flex-col items-center px-6 pb-24">
-        <div className="mt-12 inline-flex items-center gap-2 rounded-full border border-pill-border px-4 py-1.5 font-mono text-xs uppercase tracking-wide text-foreground">
+        <div className="label-mono mt-12 inline-flex items-center gap-2 rounded-full border border-pill-border px-4 py-1.5 uppercase text-foreground">
           <span>Be part of the first release</span>
           <span aria-hidden="true">↗</span>
         </div>
 
-        <h1 className="mt-10 max-w-3xl text-center font-serif text-4xl leading-tight text-foreground sm:text-5xl lg:text-6xl">
+        <h1 className="heading-1 mx-auto mt-10 max-w-[700px] text-center text-foreground">
           Years of streaks and still can&apos;t hold a conversation.
         </h1>
 
-        <p className="mt-8 max-w-[600px] text-center text-lg leading-relaxed text-foreground-muted">
+        <p className="body-lg mx-auto mt-8 max-w-[550px] text-center text-foreground-muted">
           Arcilla teaches Spanish the way you&apos;ll actually use it: out loud,
           under pressure, with someone talking back. Join the waitlist. One email
           when it&apos;s ready.
@@ -55,7 +55,7 @@ export default function Home() {
           </button>
         </div>
 
-        <p className="mt-4 text-center font-mono text-xs text-foreground-subtle">
+        <p className="body-sm mt-4 text-center text-foreground-subtle">
           No credit card. No commitment. Just early access.
         </p>
 

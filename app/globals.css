@@ -39,3 +39,69 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@layer components {
+  .heading-1 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 41px;
+    line-height: 38px;
+    letter-spacing: -0.03em;
+  }
+
+  .heading-2 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 36px;
+    line-height: 36px;
+    letter-spacing: -0.04em;
+  }
+
+  .heading-3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 28px;
+    letter-spacing: -0.03em;
+  }
+
+  .heading-4 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 17px;
+    letter-spacing: 0;
+  }
+
+  .body-xl {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 27px;
+    letter-spacing: -0.4px;
+  }
+
+  .body-lg {
+    font-family: var(--font-sans);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 23px;
+    letter-spacing: 0;
+  }
+
+  .body-sm {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0;
+  }
+
+  .label-mono {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0;
+  }
+}
