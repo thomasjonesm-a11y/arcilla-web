@@ -11,7 +11,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8">
         <span className="font-serif text-xl text-foreground">Arcilla</span>
         <button
