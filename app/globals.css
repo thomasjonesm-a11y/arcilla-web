@@ -104,4 +104,45 @@ body {
     line-height: 18px;
     letter-spacing: 0;
   }
+
+  .feature-card {
+    --glow-rgb: 102 91 244;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .feature-card:hover {
+    border-color: rgb(var(--glow-rgb) / 0.45);
+    box-shadow:
+      0 0 80px rgb(var(--glow-rgb) / 0.14),
+      inset 0 0 100px rgb(var(--glow-rgb) / 0.04);
+  }
+
+  .feature-card-illo {
+    transition: filter 0.5s ease;
+  }
+
+  .feature-card:hover .feature-card-illo {
+    filter: drop-shadow(0 0 32px rgb(var(--glow-rgb) / 0.55));
+  }
+
+  .mini-card {
+    --glow-rgb: 158 181 255;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease, background-color 0.5s ease;
+  }
+
+  .mini-card:hover {
+    border-color: rgb(var(--glow-rgb) / 0.35);
+    background-color: rgb(var(--glow-rgb) / 0.06);
+    box-shadow: 0 0 48px rgb(var(--glow-rgb) / 0.12);
+  }
+
+  .mini-card-icon {
+    transition: color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .mini-card:hover .mini-card-icon {
+    color: rgb(var(--glow-rgb) / 1);
+    border-color: rgb(var(--glow-rgb) / 0.4);
+    box-shadow: 0 0 20px rgb(var(--glow-rgb) / 0.35);
+  }
 }

@@ -86,6 +86,28 @@ export default function SkillsDiagram({ className, ...props }) {
           </text>
         </g>
       ))}
+
+      <text
+        x="378"
+        y="228"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill="#ECE7DF"
+        style={{
+          fontFamily:
+            'var(--font-noto-sans, ui-sans-serif), system-ui, sans-serif',
+          fontSize: "16px",
+          fontWeight: 300,
+          letterSpacing: "0",
+        }}
+      >
+        <tspan x="378" dy="-12">
+          We focus on all four
+        </tspan>
+        <tspan x="378" dy="24">
+          core language skills
+        </tspan>
+      </text>
     </svg>
   );
 }

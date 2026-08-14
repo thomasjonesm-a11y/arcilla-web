@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import {
   HeroIllustration,
@@ -13,24 +14,99 @@ import {
 const CARD_STROKE = "#3a3a3a";
 const CARD_FILL = "#0c0912";
 
+function EarlyAccessIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M4 13L13 4M13 4H6.5M13 4V10.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ShapeProductIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M9 2.5L14.5 5.75V11.25L9 14.5L3.5 11.25V5.75L9 2.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <circle cx="9" cy="8.5" r="2" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function BuildRealIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M9 2V16M2 9H16M4.05 4.05L13.95 13.95M13.95 4.05L4.05 13.95"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function FeatureCard({
+  glowRgb,
   illustration,
   title,
   body,
 }: {
+  glowRgb: string;
   illustration: React.ReactNode;
   title: string;
   body: string;
 }) {
   return (
-    <article className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-2xl border border-surface-border p-10">
-      <div className="flex min-h-0 flex-[0.65] items-center justify-center">
-        {illustration}
+    <article
+      className="feature-card group flex h-full min-h-[640px] flex-col overflow-hidden rounded-3xl border border-surface-border bg-background"
+      style={{ "--glow-rgb": glowRgb } as React.CSSProperties}
+    >
+      <div className="flex min-h-0 flex-1 items-center justify-center px-10 pb-4 pt-10">
+        <div className="feature-card-illo flex w-full items-center justify-center">
+          {illustration}
+        </div>
       </div>
-      <div className="mt-auto -mx-10 -mb-10 bg-gradient-to-b from-transparent to-[rgba(255,255,255,0.03)] px-10 pt-8 pb-10">
-        <h3 className="heading-3 text-foreground">{title}</h3>
-        <p className="body-lg mt-4 text-foreground-muted">{body}</p>
+      <div className="shrink-0 bg-gradient-to-b from-transparent via-[rgba(255,255,255,0.015)] to-[rgba(255,255,255,0.04)] p-10">
+        <h3 className="heading-3 text-left text-foreground">{title}</h3>
+        <p className="body-lg mt-4 text-left text-foreground-muted">{body}</p>
       </div>
+    </article>
+  );
+}
+
+function MiniCard({
+  glowRgb,
+  icon,
+  title,
+  body,
+}: {
+  glowRgb: string;
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+}) {
+  return (
+    <article
+      className="mini-card rounded-2xl border border-transparent bg-[rgba(255,255,255,0.03)] p-8"
+      style={{ "--glow-rgb": glowRgb } as React.CSSProperties}
+    >
+      <div className="flex items-center gap-4">
+        <div className="mini-card-icon flex size-10 shrink-0 items-center justify-center rounded-[10px] border border-surface-border bg-[rgba(255,255,255,0.04)] text-foreground">
+          {icon}
+        </div>
+        <h3 className="heading-4 text-foreground">{title}</h3>
+      </div>
+      <p className="body-lg mt-6 text-foreground-muted">{body}</p>
     </article>
   );
 }
@@ -46,14 +122,20 @@ const TECHNOLOGY_MINI_CARDS = [
   {
     title: "Get early access",
     body: "Join the waitlist and be among the first in. Free during early access, no strings.",
+    icon: <EarlyAccessIcon />,
+    glowRgb: "158 181 255",
   },
   {
     title: "Shape the product",
     body: "Early users decide what we build next. Your first conversations become everyone's better challenges.",
+    icon: <ShapeProductIcon />,
+    glowRgb: "236 231 223",
   },
   {
     title: "Build something real",
     body: "Every challenge is a rehearsal for the world outside the app. Practice it here. Then go do it for real.",
+    icon: <BuildRealIcon />,
+    glowRgb: "102 91 244",
   },
 ];
 
@@ -115,6 +197,54 @@ const FAQ_ITEMS = [
   },
 ];
 
+const FEATURE_CARDS = [
+  {
+    glowRgb: "102 91 244",
+    title: "The challenge",
+    body: "The AI plays the cashier. You play yourself. A counter. An order to place. Only Spanish. The AI answers in 320 milliseconds, the same pause a real person takes. No hints. No multiple choice. No way out but through.",
+    illustration: (
+      <ChallengeIllustration
+        stroke={CARD_STROKE}
+        fill={CARD_FILL}
+        className="h-auto w-full max-w-[300px]"
+      />
+    ),
+  },
+  {
+    glowRgb: "14 187 110",
+    title: "Progress",
+    body: "No streaks. No lives. No 11pm panic to protect a number. Leave for two weeks and everything is exactly where you left it. Arcilla never takes anything away. The only thing that changes is what you add.",
+    illustration: (
+      <ProgressIllustration
+        stroke={CARD_STROKE}
+        className="h-auto w-full max-w-[300px]"
+      />
+    ),
+  },
+  {
+    glowRgb: "196 132 84",
+    title: "Earn art. Not points.",
+    body: "Every challenge unlocks a ceramic piece from a real place. A Talavera bowl from Puebla. A barro negro mug from Oaxaca. Objects with four hundred years of hands behind them. The collection grows as the language opens the world.",
+    illustration: (
+      <EarnArtIllustration
+        stroke={CARD_STROKE}
+        className="h-auto w-full max-w-[300px]"
+      />
+    ),
+  },
+  {
+    glowRgb: "139 157 255",
+    title: "Real teaching, encoded.",
+    body: "Every AI character is shaped by a working language educator. How fast Carlos speaks. When he prompts you. How he handles your silence. Twenty years of classroom instinct, available at midnight.",
+    illustration: (
+      <RealTeachingIllustration
+        stroke={CARD_STROKE}
+        className="h-auto w-full max-w-[300px]"
+      />
+    ),
+  },
+];
+
 export default function Home() {
   const [email, setEmail] = useState("");
 
@@ -124,8 +254,15 @@ export default function Home() {
 
   return (
     <div className="bg-background">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8">
-        <span className="font-serif text-xl text-foreground">Arcilla</span>
+      <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-8 lg:px-10">
+        <Image
+          src="/brand/logo.png"
+          alt="Arcilla"
+          width={140}
+          height={32}
+          className="h-8 w-auto"
+          priority
+        />
         <button
           type="button"
           className="rounded-full border border-pill-border px-4 py-1.5 text-sm text-foreground"
@@ -135,7 +272,7 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto flex max-w-6xl flex-col items-center px-6 pb-24">
+      <section className="mx-auto flex max-w-7xl flex-col items-center px-6 pb-24 lg:px-10">
         <div className="label-mono mt-12 inline-flex items-center gap-2 rounded-full border border-pill-border px-4 py-1.5 uppercase text-foreground">
           <span>Be part of the first release</span>
           <span aria-hidden="true">↗</span>
@@ -178,7 +315,7 @@ export default function Home() {
       </section>
 
       {/* Four skills */}
-      <section className="mx-auto max-w-6xl px-6 py-32">
+      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
         <h2 className="heading-2 mx-auto max-w-[700px] text-center text-foreground">
           Not a game. Not passive practice.
         </h2>
@@ -187,11 +324,11 @@ export default function Home() {
           moment you&apos;ve been avoiding: the real conversation. Listening,
           reading, writing, speaking, all four, all pointed at the same door.
         </p>
-        <SkillsDiagram className="mx-auto mt-20 w-full max-w-3xl" />
+        <SkillsDiagram className="mx-auto mt-20 w-full max-w-4xl" />
       </section>
 
-      {/* Personalized path */}
-      <section className="mx-auto max-w-6xl px-6 py-32">
+      {/* Personalized path — 2×2 feature cards */}
+      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
         <h2 className="heading-2 mx-auto max-w-[700px] text-center text-foreground">
           A personalized path to fluency.
         </h2>
@@ -199,101 +336,55 @@ export default function Home() {
           Every session moves you closer to a real conversation.
         </p>
 
-        <div className="mt-20 grid items-stretch gap-8 md:grid-cols-2">
-          <FeatureCard
-            illustration={
-              <ChallengeIllustration
-                stroke={CARD_STROKE}
-                fill={CARD_FILL}
-                className="h-full max-h-full w-full max-w-xs"
-              />
-            }
-            title="The challenge"
-            body="The AI plays the cashier. You play yourself. A counter. An order to place. Only Spanish. The AI answers in 320 milliseconds, the same pause a real person takes. No hints. No multiple choice. No way out but through."
-          />
-          <FeatureCard
-            illustration={
-              <ProgressIllustration
-                stroke={CARD_STROKE}
-                className="h-full max-h-full w-full max-w-xs"
-              />
-            }
-            title="Progress"
-            body="No streaks. No lives. No 11pm panic to protect a number. Leave for two weeks and everything is exactly where you left it. Arcilla never takes anything away. The only thing that changes is what you add."
-          />
+        <div className="mt-20 grid items-stretch gap-5 md:grid-cols-2">
+          {FEATURE_CARDS.map((card) => (
+            <FeatureCard
+              key={card.title}
+              glowRgb={card.glowRgb}
+              illustration={card.illustration}
+              title={card.title}
+              body={card.body}
+            />
+          ))}
         </div>
       </section>
 
-      {/* Earn art / Real teaching */}
-      <section className="mx-auto max-w-6xl px-6 py-32">
-        <div className="grid items-stretch gap-8 md:grid-cols-2">
-          <FeatureCard
-            illustration={
-              <EarnArtIllustration
-                stroke={CARD_STROKE}
-                className="h-full max-h-full w-full max-w-xs"
-              />
-            }
-            title="Earn art. Not points."
-            body="Every challenge unlocks a ceramic piece from a real place. A Talavera bowl from Puebla. A barro negro mug from Oaxaca. Objects with four hundred years of hands behind them. The collection grows as the language opens the world."
-          />
-          <FeatureCard
-            illustration={
-              <RealTeachingIllustration
-                stroke={CARD_STROKE}
-                className="h-full max-h-full w-full max-w-xs"
-              />
-            }
-            title="Real teaching, encoded."
-            body="Every AI character is shaped by a working language educator. How fast Carlos speaks. When he prompts you. How he handles your silence. Twenty years of classroom instinct, available at midnight."
-          />
+      {/* Technology band + mini-cards */}
+      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
+        <div className="grid gap-10 md:grid-cols-3 md:items-start md:gap-8 lg:gap-12">
+          <h2 className="heading-2 text-foreground">
+            Technology guided by education.
+          </h2>
+          <p className="body-lg text-foreground-muted">
+            Arcilla uses AI to shape every session around you: your pace, your
+            gaps, your reasons for learning. The curriculum underneath it comes
+            from educators who have spent years in real classrooms watching real
+            students find their voice.
+          </p>
+          <p className="body-lg text-foreground-muted">
+            We&apos;re not replacing teachers. We&apos;re building what they
+            would build if they had unlimited time with every student. Arcilla is
+            for people who want structured progress instead of random vocabulary,
+            who learn at their own pace, and who are done collecting points and
+            ready to actually speak.
+          </p>
         </div>
-      </section>
 
-      {/* Technology guided by education */}
-      <section className="border-y border-surface-border py-32">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-8 md:grid-cols-3 md:items-start md:gap-12">
-            <h2 className="heading-2 text-foreground">
-              Technology guided by education.
-            </h2>
-            <p className="body-lg text-foreground-muted">
-              Arcilla uses AI to shape every session around you: your pace, your
-              gaps, your reasons for learning. The curriculum underneath it comes
-              from educators who have spent years in real classrooms watching real
-              students find their voice.
-            </p>
-            <p className="body-lg text-foreground-muted">
-              We&apos;re not replacing teachers. We&apos;re building what they
-              would build if they had unlimited time with every student. Arcilla is
-              for people who want structured progress instead of random vocabulary,
-              who learn at their own pace, and who are done collecting points and
-              ready to actually speak.
-            </p>
-          </div>
-
-          <div className="mt-20 grid gap-6 md:grid-cols-3">
-            {TECHNOLOGY_MINI_CARDS.map((card) => (
-              <article
-                key={card.title}
-                className="rounded-xl bg-surface p-6"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="size-10 shrink-0 rounded-lg border border-surface-border bg-[rgba(255,255,255,0.03)]"
-                    aria-hidden="true"
-                  />
-                  <h3 className="heading-4 text-foreground">{card.title}</h3>
-                </div>
-                <p className="body-lg mt-4 text-foreground-muted">{card.body}</p>
-              </article>
-            ))}
-          </div>
+        <div className="mt-16 grid gap-4 md:grid-cols-3 md:gap-5">
+          {TECHNOLOGY_MINI_CARDS.map((card) => (
+            <MiniCard
+              key={card.title}
+              glowRgb={card.glowRgb}
+              icon={card.icon}
+              title={card.title}
+              body={card.body}
+            />
+          ))}
         </div>
       </section>
 
       {/* Built differently + FAQ */}
-      <section className="mx-auto max-w-6xl px-6 py-32">
+      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-16">
           <div className="md:max-w-xl">
             <h2 className="heading-2 text-foreground">
@@ -306,11 +397,11 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3 md:max-w-md md:justify-end">
+          <div className="grid grid-cols-2 gap-3 md:max-w-md">
             {BUILT_DIFFERENTLY_TAGS.map((tag) => (
               <span
                 key={tag}
-                className="label-mono rounded-full border border-surface-border px-4 py-1.5 uppercase text-foreground"
+                className="label-mono rounded-full border border-surface-border px-4 py-1.5 text-center uppercase text-foreground"
               >
                 {tag}
               </span>
@@ -318,43 +409,46 @@ export default function Home() {
           </div>
         </div>
 
-        <h2 className="heading-2 mx-auto mt-20 max-w-[700px] text-center text-foreground">
-          Frequently Asked Questions
-        </h2>
-        <p className="body-lg mx-auto mt-8 max-w-[550px] text-center text-foreground-muted">
-          Straight answers on how Arcilla works, what happens to your voice, and
-          what makes this different.
-        </p>
+        <div className="mx-auto mt-24 max-w-4xl rounded-3xl border border-surface-border px-6 py-10 md:px-12 md:py-14">
+          <h2 className="heading-2 text-center text-foreground">
+            Frequently Asked Questions
+          </h2>
+          <p className="body-lg mx-auto mt-8 max-w-[550px] text-center text-foreground-muted">
+            Straight answers on how Arcilla works, what happens to your voice, and
+            what makes this different.
+          </p>
 
-        <div className="mx-auto mt-20 max-w-2xl divide-y divide-surface-border border-y border-surface-border">
-          {FAQ_ITEMS.map((item) => (
-            <details key={item.question} className="group py-8 md:py-10">
-              <summary className="heading-4 flex cursor-pointer list-none items-center justify-between gap-6 text-foreground [&::-webkit-details-marker]:hidden">
-                <span>{item.question}</span>
-                <span
-                  className="shrink-0 text-xl leading-none text-foreground-muted transition-transform duration-200 group-open:rotate-45"
-                  aria-hidden="true"
-                >
-                  +
-                </span>
-              </summary>
-              <p className="body-lg mt-6 text-foreground-muted">{item.answer}</p>
-            </details>
-          ))}
+          <div className="mt-12 divide-y divide-dashed divide-surface-border border-y border-dashed border-surface-border">
+            {FAQ_ITEMS.map((item) => (
+              <details key={item.question} className="group py-8 md:py-10">
+                <summary className="heading-4 flex cursor-pointer list-none items-center justify-between gap-6 text-foreground [&::-webkit-details-marker]:hidden">
+                  <span>{item.question}</span>
+                  <span
+                    className="shrink-0 text-xl leading-none text-foreground-muted transition-transform duration-200 group-open:rotate-45"
+                    aria-hidden="true"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="body-lg mt-6 text-foreground-muted">{item.answer}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="relative border-t border-surface-border py-16 md:py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <p
-            className="text-center font-serif font-normal leading-none text-foreground"
-            style={{ fontSize: "clamp(4rem, 18vw, 20rem)" }}
-          >
-            Arcilla
-          </p>
+      <footer className="relative py-16 md:py-24">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <Image
+            src="/brand/footer-wordmark.png"
+            alt="Arcilla"
+            width={2400}
+            height={400}
+            className="h-auto w-full"
+          />
         </div>
-        <p className="body-sm absolute right-6 bottom-6 text-foreground-subtle md:right-8 md:bottom-8">
+        <p className="body-sm absolute right-6 bottom-6 text-foreground-subtle lg:right-10 lg:bottom-8">
           &copy; All rights reserved.
         </p>
       </footer>
