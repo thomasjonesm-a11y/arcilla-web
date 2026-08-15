@@ -11,7 +11,6 @@ import {
   RealTeachingIllustration,
 } from "@/components/illustrations";
 
-const CARD_STROKE = "#3a3a3a";
 const CARD_FILL = "#0c0912";
 
 function EarlyAccessIcon() {
@@ -56,12 +55,12 @@ function BuildRealIcon() {
 }
 
 function FeatureCard({
-  glowRgb,
+  hoverColor,
   illustration,
   title,
   body,
 }: {
-  glowRgb: string;
+  hoverColor: string;
   illustration: React.ReactNode;
   title: string;
   body: string;
@@ -69,7 +68,7 @@ function FeatureCard({
   return (
     <article
       className="feature-card group flex h-full min-h-[640px] flex-col overflow-hidden rounded-3xl border border-surface-border bg-background"
-      style={{ "--glow-rgb": glowRgb } as React.CSSProperties}
+      style={{ "--card-hover": hoverColor } as React.CSSProperties}
     >
       <div className="flex min-h-0 flex-1 items-center justify-center px-10 pb-4 pt-10">
         <div className="feature-card-illo flex w-full items-center justify-center">
@@ -199,48 +198,38 @@ const FAQ_ITEMS = [
 
 const FEATURE_CARDS = [
   {
-    glowRgb: "102 91 244",
+    hoverColor: "var(--hover-purple)",
     title: "The challenge",
     body: "The AI plays the cashier. You play yourself. A counter. An order to place. Only Spanish. The AI answers in 320 milliseconds, the same pause a real person takes. No hints. No multiple choice. No way out but through.",
     illustration: (
       <ChallengeIllustration
-        stroke={CARD_STROKE}
         fill={CARD_FILL}
         className="h-auto w-full max-w-[300px]"
       />
     ),
   },
   {
-    glowRgb: "14 187 110",
+    hoverColor: "var(--hover-red)",
     title: "Progress",
     body: "No streaks. No lives. No 11pm panic to protect a number. Leave for two weeks and everything is exactly where you left it. Arcilla never takes anything away. The only thing that changes is what you add.",
     illustration: (
-      <ProgressIllustration
-        stroke={CARD_STROKE}
-        className="h-auto w-full max-w-[300px]"
-      />
+      <ProgressIllustration className="h-auto w-full max-w-[300px]" />
     ),
   },
   {
-    glowRgb: "196 132 84",
+    hoverColor: "var(--hover-green)",
     title: "Earn art. Not points.",
     body: "Every challenge unlocks a ceramic piece from a real place. A Talavera bowl from Puebla. A barro negro mug from Oaxaca. Objects with four hundred years of hands behind them. The collection grows as the language opens the world.",
     illustration: (
-      <EarnArtIllustration
-        stroke={CARD_STROKE}
-        className="h-auto w-full max-w-[300px]"
-      />
+      <EarnArtIllustration className="h-auto w-full max-w-[300px]" />
     ),
   },
   {
-    glowRgb: "139 157 255",
+    hoverColor: "var(--hover-yellow)",
     title: "Real teaching, encoded.",
     body: "Every AI character is shaped by a working language educator. How fast Carlos speaks. When he prompts you. How he handles your silence. Twenty years of classroom instinct, available at midnight.",
     illustration: (
-      <RealTeachingIllustration
-        stroke={CARD_STROKE}
-        className="h-auto w-full max-w-[300px]"
-      />
+      <RealTeachingIllustration className="h-auto w-full max-w-[300px]" />
     ),
   },
 ];
@@ -340,7 +329,7 @@ export default function Home() {
           {FEATURE_CARDS.map((card) => (
             <FeatureCard
               key={card.title}
-              glowRgb={card.glowRgb}
+              hoverColor={card.hoverColor}
               illustration={card.illustration}
               title={card.title}
               body={card.body}

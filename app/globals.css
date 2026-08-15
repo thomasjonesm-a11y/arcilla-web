@@ -10,6 +10,10 @@
   --surface-border: #222222;
   --pill-border: #ece7df;
   --success: #0ebb6e;
+  --hover-purple: #665bf4;
+  --hover-red: #e5484d;
+  --hover-green: #30a46c;
+  --hover-yellow: #f5d90a;
 
   --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-noto-sans), system-ui, -apple-system, sans-serif;
@@ -106,23 +110,24 @@ body {
   }
 
   .feature-card {
-    --glow-rgb: 102 91 244;
-    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+    --card-hover: var(--hover-purple);
+    transition: border-color 0.25s ease;
   }
 
   .feature-card:hover {
-    border-color: rgb(var(--glow-rgb) / 0.45);
-    box-shadow:
-      0 0 80px rgb(var(--glow-rgb) / 0.14),
-      inset 0 0 100px rgb(var(--glow-rgb) / 0.04);
+    border-color: var(--card-hover);
   }
 
   .feature-card-illo {
-    transition: filter 0.5s ease;
+    color: #3a3a3a;
+    transition: color 0.25s ease, filter 0.25s ease;
   }
 
   .feature-card:hover .feature-card-illo {
-    filter: drop-shadow(0 0 32px rgb(var(--glow-rgb) / 0.55));
+    color: var(--card-hover);
+    filter: drop-shadow(
+      0 0 24px color-mix(in srgb, var(--card-hover) 55%, transparent)
+    );
   }
 
   .mini-card {
