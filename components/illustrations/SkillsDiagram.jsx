@@ -28,8 +28,9 @@ const RECT_H = 36;
 export default function SkillsDiagram({ className, ...props }) {
   return (
     <svg
-      viewBox="0 0 756 471"
+      viewBox="-5 -5 766 481"
       fill="none"
+      overflow="visible"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       role="img"
@@ -51,7 +52,7 @@ export default function SkillsDiagram({ className, ...props }) {
         .arcilla-skill-label {
           font-family: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Mono",
             "Roboto Mono", monospace;
-          font-size: 18px;
+          font-size: 12px;
           fill: #FFF;
           user-select: none;
           pointer-events: none;

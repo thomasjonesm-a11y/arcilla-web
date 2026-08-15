@@ -1,18 +1,14 @@
 // The challenge — isometric stacked layers
 // Original stroke #222222, fill #030303. Stroke uses currentColor so you can
 // theme it from the parent; override with the `stroke` prop if you want it fixed.
-export default function ChallengeIllustration({
-  className,
-  stroke = "currentColor",
-  fill = "#030303",
-  ...props
-}) {
+export default function ChallengeIllustration({ className = "", ...props }) {
   return (
     <svg
-      viewBox="0 0 319 296"
+      viewBox="-5 -5 329 306"
       fill="none"
+      overflow="visible"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={`challenge-illustration ${className}`.trim()}
       role="img"
       aria-label="Stacked layers representing a challenge"
       {...props}
@@ -24,7 +20,13 @@ export default function ChallengeIllustration({
         "M4.75536 195.609L161.18 126.57C161.702 126.34 162.297 126.343 162.816 126.58L314.415 195.62C316.063 196.37 315.945 198.749 314.231 199.333L162.635 250.992C162.223 251.132 161.776 251.134 161.363 250.998L4.93574 199.338C3.19691 198.764 3.08008 196.349 4.75536 195.609Z",
         "M4.75536 239.359L161.18 170.32C161.702 170.09 162.297 170.093 162.816 170.33L314.415 239.37C316.063 240.12 315.945 242.499 314.231 243.083L162.635 294.742C162.223 294.882 161.776 294.884 161.363 294.748L4.93574 243.088C3.19691 242.514 3.08008 240.099 4.75536 239.359Z",
       ].map((d, i) => (
-        <path key={i} d={d} fill={fill} stroke={stroke} strokeWidth={1.8} />
+        <path
+          key={i}
+          className="feature-card-shape"
+          d={d}
+          stroke="currentColor"
+          strokeWidth={1.8}
+        />
       ))}
     </svg>
   );

@@ -1,5 +1,4 @@
 // Real teaching, encoded. — four floating isometric cubes
-// Line art, stroke #222222 originally. Uses currentColor.
 // Each cube is a group of 4 face paths + 1 base rect.
 const CUBES = [
   {
@@ -40,17 +39,13 @@ const CUBES = [
   },
 ];
 
-export default function RealTeachingIllustration({
-  className,
-  stroke = "currentColor",
-  ...props
-}) {
+export default function RealTeachingIllustration({ className = "", ...props }) {
   return (
     <svg
       viewBox="0 0 352 294"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={`real-teaching-illustration ${className}`.trim()}
       role="img"
       aria-label="Four floating cubes representing encoded teaching"
       {...props}
@@ -58,15 +53,22 @@ export default function RealTeachingIllustration({
       {CUBES.map((cube, ci) => (
         <g key={ci}>
           {cube.paths.map((d, pi) => (
-            <path key={pi} d={d} stroke={stroke} strokeWidth={1.8} />
+            <path
+              key={pi}
+              className="feature-card-shape"
+              d={d}
+              stroke="currentColor"
+              strokeWidth={1.8}
+            />
           ))}
           <rect
+            className="feature-card-shape"
             x={cube.rect.x}
             y={cube.rect.y}
             width={cube.rect.w}
             height={cube.rect.h}
             rx={2}
-            stroke={stroke}
+            stroke="currentColor"
             strokeWidth={1.8}
           />
         </g>

@@ -1,5 +1,4 @@
 // Earn art. Not points. — isometric staircase
-// Line art, stroke #222222 originally. Uses currentColor.
 const PATHS = [
   "M73.9913 217.5H3.44543C2.53485 217.5 2.09812 218.618 2.76755 219.235L39.0985 252.735C39.2832 252.905 39.5252 253 39.7764 253H109.85C110.758 253 111.196 251.889 110.533 251.269L74.674 217.769C74.4888 217.596 74.2448 217.5 73.9913 217.5Z",
   "M111.569 180.704L74.0694 145.577C73.4306 144.979 72.3857 145.432 72.3857 146.307V215.074C72.3857 215.346 72.4965 215.607 72.6925 215.795L110.192 251.871C110.828 252.482 111.886 252.032 111.886 251.15V181.433C111.886 181.157 111.771 180.893 111.569 180.704Z",
@@ -14,8 +13,10 @@ const PATHS = [
   "M257.609 36.0628L219.879 2.90743C219.186 2.29861 219.616 1.15625 220.539 1.15625L289.237 1.1562C289.787 1.1562 290.234 1.59969 290.237 2.14924L290.471 35.7474C290.475 36.3079 290.018 36.7622 289.457 36.7543L258.255 36.3115C258.017 36.3081 257.787 36.2199 257.609 36.0628Z",
 ];
 
+const FIXED_STROKE_INDEX = 6;
+
 export default function EarnArtIllustration({
-  className,
+  className = "",
   stroke = "currentColor",
   ...props
 }) {
@@ -24,16 +25,24 @@ export default function EarnArtIllustration({
       viewBox="0 0 331 326"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={`earn-art-illustration ${className}`.trim()}
       role="img"
       aria-label="Isometric staircase representing earned art"
       {...props}
     >
-      <g>
-        {PATHS.map((d, i) => (
-          <path key={i} d={d} stroke={stroke} strokeWidth={1.8} />
-        ))}
-      </g>
+      {PATHS.map((d, i) => (
+        <path
+          key={i}
+          className={
+            i === FIXED_STROKE_INDEX
+              ? "earn-art-fixed-shape"
+              : "feature-card-shape"
+          }
+          d={d}
+          stroke={i === FIXED_STROKE_INDEX ? "#3a3a3a" : stroke}
+          strokeWidth={1.8}
+        />
+      ))}
     </svg>
   );
 }

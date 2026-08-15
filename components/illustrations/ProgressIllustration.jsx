@@ -1,5 +1,5 @@
 // Progress — ascending bar chart
-// 12 bars, generally rising left to right. Stroke uses currentColor.
+// 12 bars, generally rising left to right.
 const BARS = [
   { x: 0.899902, y: 210.373, h: 88.0274 },
   { x: 30.4136, y: 199.777, h: 98.6233 },
@@ -15,17 +15,13 @@ const BARS = [
   { x: 325.553, y: 0.899902, h: 297.5 },
 ];
 
-export default function ProgressIllustration({
-  className,
-  stroke = "currentColor",
-  ...props
-}) {
+export default function ProgressIllustration({ className = "", ...props }) {
   return (
     <svg
       viewBox="0 0 342 300"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={`progress-illustration ${className}`.trim()}
       role="img"
       aria-label="Ascending bar chart representing progress over time"
       {...props}
@@ -33,12 +29,13 @@ export default function ProgressIllustration({
       {BARS.map((b, i) => (
         <rect
           key={i}
+          className="feature-card-shape"
           x={b.x}
           y={b.y}
           width={15.3472}
           height={b.h}
           rx={2}
-          stroke={stroke}
+          stroke="currentColor"
           strokeWidth={1.8}
         />
       ))}

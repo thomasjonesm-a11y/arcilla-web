@@ -1,7 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  fireWaitlistConfetti,
+  isValidEmail,
+} from "@/lib/waitlist-celebration";
 import {
   HeroIllustration,
   SkillsDiagram,
@@ -10,8 +14,6 @@ import {
   EarnArtIllustration,
   RealTeachingIllustration,
 } from "@/components/illustrations";
-
-const CARD_FILL = "#0c0912";
 
 function EarlyAccessIcon() {
   return (
@@ -45,12 +47,222 @@ function BuildRealIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
       <path
-        d="M9 2V16M2 9H16M4.05 4.05L13.95 13.95M13.95 4.05L4.05 13.95"
+        d="M9 1.5L10.1 6.4L15 7.5L10.1 8.6L9 13.5L7.9 8.6L3 7.5L7.9 6.4L9 1.5Z"
         stroke="currentColor"
         strokeWidth="1.5"
-        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+function NavWaitlist({
+  email,
+  onEmailChange,
+  onSubmit,
+}: {
+  email: string;
+  onEmailChange: (value: string) => void;
+  onSubmit: () => void;
+}) {
+  const MIN_EXPANDED_WIDTH = 396;
+  const MAX_EXPANDED_WIDTH = 560;
+  const COLLAPSED_PADDING = 12;
+
+  const [expanded, setExpanded] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [compactWidth, setCompactWidth] = useState(184);
+  const [expandedWidth, setExpandedWidth] = useState(MIN_EXPANDED_WIDTH);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const joinRef = useRef<HTMLButtonElement>(null);
+
+  function collapse() {
+    setExpanded(false);
+    setSubmitted(false);
+  }
+
+  function expand() {
+    setExpanded(true);
+    setSubmitted(false);
+  }
+
+  function handleSubmitClick() {
+    if (!isValidEmail(email)) return;
+
+    if (buttonRef.current) {
+      fireWaitlistConfetti(buttonRef.current);
+    }
+
+    onSubmit();
+    setSubmitted(true);
+  }
+
+  useLayoutEffect(() => {
+    if (!measureRef.current) return;
+
+    measureRef.current.textContent = "You're on the list";
+    const successTextWidth = measureRef.current.getBoundingClientRect().width;
+    const successChrome = 16 + 8 + 24;
+
+    setCompactWidth(
+      Math.ceil(successTextWidth + successChrome + COLLAPSED_PADDING),
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!expanded || submitted || !measureRef.current) return;
+
+    const text = email || "Your email address";
+    measureRef.current.textContent = text;
+    const textWidth = measureRef.current.getBoundingClientRect().width;
+    const buttonWidth = buttonRef.current?.offsetWidth ?? 36;
+    const chrome = 36;
+
+    setExpandedWidth(
+      Math.min(
+        MAX_EXPANDED_WIDTH,
+        Math.max(MIN_EXPANDED_WIDTH, Math.ceil(textWidth + buttonWidth + chrome)),
+      ),
+    );
+  }, [email, expanded, submitted]);
+
+  const pillWidth = !expanded || submitted ? compactWidth : expandedWidth;
+
+  useEffect(() => {
+    setSubmitted(false);
+  }, [email]);
+
+  useEffect(() => {
+    if (expanded) {
+      inputRef.current?.focus();
+    }
+  }, [expanded]);
+
+  useEffect(() => {
+    if (!expanded) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        collapse();
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        collapse();
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [expanded]);
+
+  const joinContentClass = expanded ? "" : "cursor-pointer";
+
+  return (
+    <div ref={containerRef} className="relative">
+      <span
+        ref={measureRef}
+        className="pointer-events-none invisible absolute whitespace-pre text-sm"
+        aria-hidden="true"
+      />
+      <div
+        data-expanded={expanded}
+        data-submitted={submitted}
+        style={{
+          width: pillWidth,
+          maxWidth: pillWidth,
+        }}
+        className="nav-waitlist"
+      >
+        <button
+          ref={joinRef}
+          type="button"
+          onClick={expand}
+          aria-hidden={expanded}
+          tabIndex={expanded ? -1 : 0}
+          className={`nav-waitlist-join px-3 py-[13px] text-sm text-foreground ${joinContentClass}`}
+        >
+          Join the waitlist
+        </button>
+        <div className="nav-waitlist-field">
+          <div
+            className={`nav-waitlist-form ${submitted ? "is-hidden" : "is-visible"}`}
+          >
+            <input
+              ref={inputRef}
+              type="email"
+              value={email}
+              onChange={(e) => onEmailChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSubmitClick();
+                }
+              }}
+              placeholder="Your email address"
+              tabIndex={expanded && !submitted ? 0 : -1}
+              className="min-w-0 flex-1 bg-transparent px-3 py-1.5 text-sm text-foreground outline-none placeholder:text-foreground-subtle"
+            />
+            <button
+              ref={buttonRef}
+              type="button"
+              onClick={handleSubmitClick}
+              aria-label="Get notified"
+              tabIndex={expanded && !submitted ? 0 : -1}
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[rgba(255,255,255,0.3)] bg-transparent text-foreground transition-colors duration-200 ease-in-out hover:border-foreground/60 hover:bg-[rgba(255,255,255,0.08)]"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 8H13M13 8L9 4M13 8L9 12"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <div
+            className={`nav-waitlist-success text-sm text-foreground ${submitted ? "is-visible" : "is-hidden"}`}
+            aria-live="polite"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M3.5 8.25L6.5 11.25L12.5 4.75"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>You&apos;re on the list</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -67,7 +279,7 @@ function FeatureCard({
 }) {
   return (
     <article
-      className="feature-card group flex h-full min-h-[640px] flex-col overflow-hidden rounded-3xl border border-surface-border bg-background"
+      className="feature-card group flex h-full min-h-[640px] flex-col overflow-hidden rounded-3xl border border-surface-border bg-background hover:border-[var(--card-hover)]"
       style={{ "--card-hover": hoverColor } as React.CSSProperties}
     >
       <div className="flex min-h-0 flex-1 items-center justify-center px-10 pb-4 pt-10">
@@ -75,38 +287,100 @@ function FeatureCard({
           {illustration}
         </div>
       </div>
-      <div className="shrink-0 bg-gradient-to-b from-transparent via-[rgba(255,255,255,0.015)] to-[rgba(255,255,255,0.04)] p-10">
-        <h3 className="heading-3 text-left text-foreground">{title}</h3>
-        <p className="body-lg mt-4 text-left text-foreground-muted">{body}</p>
+      <div className="shrink-0 p-10">
+        <h3 className="bd-xl-rg text-left text-foreground">{title}</h3>
+        <p className="bd-sm-rg mt-[calc(1rem/3)] text-left text-foreground-muted">{body}</p>
       </div>
     </article>
   );
 }
 
 function MiniCard({
-  glowRgb,
   icon,
   title,
   body,
 }: {
-  glowRgb: string;
   icon: React.ReactNode;
   title: string;
   body: string;
 }) {
   return (
-    <article
-      className="mini-card rounded-2xl border border-transparent bg-[rgba(255,255,255,0.03)] p-8"
-      style={{ "--glow-rgb": glowRgb } as React.CSSProperties}
-    >
-      <div className="flex items-center gap-4">
-        <div className="mini-card-icon flex size-10 shrink-0 items-center justify-center rounded-[10px] border border-surface-border bg-[rgba(255,255,255,0.04)] text-foreground">
+    <article className="mini-card flex flex-col rounded-2xl bg-[#080808] p-6 md:p-8">
+      <div className="flex items-stretch gap-2">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-[4px] bg-[rgba(255,255,255,0.04)] text-foreground">
           {icon}
         </div>
-        <h3 className="heading-4 text-foreground">{title}</h3>
+        <div className="flex min-h-10 flex-1 items-center rounded-[4px] bg-[rgba(255,255,255,0.04)] px-4">
+          <h3 className="bd-lg-rg text-foreground">{title}</h3>
+        </div>
       </div>
-      <p className="body-lg mt-6 text-foreground-muted">{body}</p>
+      <p className="bd-sm-rg mt-6 text-foreground-muted">{body}</p>
     </article>
+  );
+}
+
+function FaqList({
+  items,
+}: {
+  items: { question: string; answer: string }[];
+}) {
+  const [openQuestions, setOpenQuestions] = useState<Set<string>>(new Set());
+
+  function toggleQuestion(question: string) {
+    setOpenQuestions((prev) => {
+      const next = new Set(prev);
+      if (next.has(question)) {
+        next.delete(question);
+      } else {
+        next.add(question);
+      }
+      return next;
+    });
+  }
+
+  return (
+    <div className="mx-auto mt-[56px] max-w-[800px] divide-y divide-surface-border border-y border-surface-border">
+      {items.map((item, index) => {
+        const isOpen = openQuestions.has(item.question);
+        const panelId = `faq-panel-${index}`;
+        const triggerId = `faq-trigger-${index}`;
+
+        return (
+          <div key={item.question} className="py-4 md:py-5">
+            <button
+              type="button"
+              id={triggerId}
+              className="bd-lg-rg flex w-full cursor-pointer items-center justify-between gap-6 text-left text-foreground"
+              onClick={() => toggleQuestion(item.question)}
+              aria-expanded={isOpen}
+              aria-controls={panelId}
+            >
+              <span>{item.question}</span>
+              <span
+                className={`shrink-0 text-base leading-none text-foreground-muted transition-transform duration-300 ease-in-out ${isOpen ? "rotate-45" : ""}`}
+                aria-hidden="true"
+              >
+                +
+              </span>
+            </button>
+            <div
+              id={panelId}
+              role="region"
+              aria-labelledby={triggerId}
+              className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <p
+                  className={`bd-sm-rg mt-3 text-foreground-muted transition-opacity duration-300 ease-in-out ${isOpen ? "opacity-100" : "opacity-0"}`}
+                >
+                  {item.answer}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -122,19 +396,16 @@ const TECHNOLOGY_MINI_CARDS = [
     title: "Get early access",
     body: "Join the waitlist and be among the first in. Free during early access, no strings.",
     icon: <EarlyAccessIcon />,
-    glowRgb: "158 181 255",
   },
   {
     title: "Shape the product",
     body: "Early users decide what we build next. Your first conversations become everyone's better challenges.",
     icon: <ShapeProductIcon />,
-    glowRgb: "236 231 223",
   },
   {
     title: "Build something real",
     body: "Every challenge is a rehearsal for the world outside the app. Practice it here. Then go do it for real.",
     icon: <BuildRealIcon />,
-    glowRgb: "102 91 244",
   },
 ];
 
@@ -158,11 +429,6 @@ const FAQ_ITEMS = [
     question: "What is a challenge?",
     answer:
       "The core of Arcilla. The AI plays a real person, a cashier, a patient, a landlord, and you have a real conversation in Spanish. No hints, no multiple choice, no switching to English.",
-  },
-  {
-    question: "Do I need to keep the app open during meetings?",
-    answer:
-      "No. Once connected, it joins automatically and handles everything in the background.",
   },
   {
     question: "Do I have to speak out loud?",
@@ -202,10 +468,7 @@ const FEATURE_CARDS = [
     title: "The challenge",
     body: "The AI plays the cashier. You play yourself. A counter. An order to place. Only Spanish. The AI answers in 320 milliseconds, the same pause a real person takes. No hints. No multiple choice. No way out but through.",
     illustration: (
-      <ChallengeIllustration
-        fill={CARD_FILL}
-        className="h-auto w-full max-w-[300px]"
-      />
+      <ChallengeIllustration className="h-auto w-full max-w-[300px]" />
     ),
   },
   {
@@ -243,89 +506,70 @@ export default function Home() {
 
   return (
     <div className="bg-background">
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-8 lg:px-10">
-        <Image
-          src="/brand/logo.png"
-          alt="Arcilla"
-          width={140}
-          height={32}
-          className="h-8 w-auto"
-          priority
-        />
-        <button
-          type="button"
-          className="rounded-full border border-pill-border px-4 py-1.5 text-sm text-foreground"
-        >
-          Join the waitlist
-        </button>
+      <header className="site-header sticky top-0 z-50">
+        <div className="mx-auto w-full px-6">
+          <div className="mx-auto flex w-full max-w-[min(1296px,calc(100vw-48px))] items-center justify-between py-8">
+            <Image
+              src="/brand/logo.png"
+              alt="Arcilla"
+              width={140}
+              height={32}
+              className="h-8 w-auto"
+              priority
+            />
+            <NavWaitlist
+              email={email}
+              onEmailChange={setEmail}
+              onSubmit={handleSubmit}
+            />
+          </div>
+        </div>
       </header>
 
       {/* Hero */}
       <section className="mx-auto flex max-w-7xl flex-col items-center px-6 pb-24 lg:px-10">
-        <div className="label-mono mt-12 inline-flex items-center gap-2 rounded-full border border-pill-border px-4 py-1.5 uppercase text-foreground">
-          <span>Be part of the first release</span>
-          <span aria-hidden="true">↗</span>
-        </div>
+        <p className="label-mono mt-[100px] rounded-full bg-[#121212] px-4 py-1.5 text-foreground">
+          Be part of the first release
+        </p>
 
-        <h1 className="heading-1 mx-auto mt-10 max-w-[700px] text-center text-foreground">
+        <h1 className="heading-1 mx-auto mt-5 max-w-[567px] text-center text-foreground">
           Years of streaks and still can&apos;t hold a conversation.
         </h1>
 
-        <p className="body-lg mx-auto mt-8 max-w-[550px] text-center text-foreground-muted">
+        <p className="body-lg mx-auto mb-[100px] mt-4 max-w-[550px] text-center text-foreground-muted">
           Arcilla teaches Spanish the way you&apos;ll actually use it: out loud,
           under pressure, with someone talking back. Join the waitlist. One email
           when it&apos;s ready.
         </p>
 
-        <div className="mt-12 flex w-full max-w-md items-center rounded-full border border-pill-border p-1.5">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your Email Address"
-            className="min-w-0 flex-1 bg-transparent px-4 py-2 text-foreground outline-none placeholder:text-foreground-subtle"
-          />
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="shrink-0 rounded-full bg-foreground px-5 py-2 text-sm text-background"
-          >
-            Get Notified
-          </button>
-        </div>
-
-        <p className="body-sm mt-4 text-center text-foreground-subtle">
-          No credit card. No commitment. Just early access.
-        </p>
-
-        <div className="mt-20 w-full max-w-[1000px]">
+        <div className="w-full max-w-[1000px]">
           <HeroIllustration className="h-auto w-full" />
         </div>
       </section>
 
       {/* Four skills */}
-      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
+      <section className="mx-auto max-w-7xl px-6 pt-24 pb-12 lg:px-10 lg:pt-32 lg:pb-16">
         <h2 className="heading-2 mx-auto max-w-[700px] text-center text-foreground">
           Not a game. Not passive practice.
         </h2>
-        <p className="body-lg mx-auto mt-8 max-w-[550px] text-center text-foreground-muted">
+        <p className="body-lg mx-auto mt-4 max-w-[550px] text-center text-foreground-muted">
           Every app rewards you for showing up. Arcilla prepares you for the
           moment you&apos;ve been avoiding: the real conversation. Listening,
           reading, writing, speaking, all four, all pointed at the same door.
         </p>
-        <SkillsDiagram className="mx-auto mt-20 w-full max-w-4xl" />
+        <SkillsDiagram className="mx-auto mt-10 w-full max-w-4xl" />
       </section>
 
       {/* Personalized path — 2×2 feature cards */}
-      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
+      <section className="mx-auto max-w-7xl px-6 pt-12 pb-24 lg:px-10 lg:pt-16 lg:pb-32">
         <h2 className="heading-2 mx-auto max-w-[700px] text-center text-foreground">
           A personalized path to fluency.
         </h2>
-        <p className="body-lg mx-auto mt-8 max-w-[550px] text-center text-foreground-muted">
+        <p className="body-lg mx-auto mt-2 max-w-[550px] text-center text-foreground-muted">
           Every session moves you closer to a real conversation.
         </p>
 
-        <div className="mt-20 grid items-stretch gap-5 md:grid-cols-2">
+        <div className="mt-[100px] grid items-stretch gap-5 md:grid-cols-2">
           {FEATURE_CARDS.map((card) => (
             <FeatureCard
               key={card.title}
@@ -339,8 +583,8 @@ export default function Home() {
       </section>
 
       {/* Technology band + mini-cards */}
-      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
-        <div className="grid gap-10 md:grid-cols-3 md:items-start md:gap-8 lg:gap-12">
+      <section className="mx-auto max-w-7xl px-6 pt-24 pb-12 lg:px-10 lg:pt-32 lg:pb-16">
+        <div className="grid gap-5 md:grid-cols-3 md:items-start md:gap-4 lg:gap-6">
           <h2 className="heading-2 text-foreground">
             Technology guided by education.
           </h2>
@@ -359,11 +603,10 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-16 grid gap-4 md:grid-cols-3 md:gap-5">
+        <div className="mt-8 grid gap-4 md:grid-cols-3 md:gap-5">
           {TECHNOLOGY_MINI_CARDS.map((card) => (
             <MiniCard
               key={card.title}
-              glowRgb={card.glowRgb}
               icon={card.icon}
               title={card.title}
               body={card.body}
@@ -372,74 +615,69 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Built differently + FAQ */}
-      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
-        <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-16">
+      {/* Built differently */}
+      <section className="mx-auto max-w-7xl px-6 py-[108px] lg:px-10">
+        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between md:gap-8">
           <div className="md:max-w-xl">
             <h2 className="heading-2 text-foreground">
               Built differently, on purpose.
             </h2>
-            <p className="body-lg mt-8 text-foreground-muted">
+            <p className="body-lg mt-2 text-foreground-muted">
               Arcilla is designed for one outcome: you leave every session closer to
               a real conversation than when you started. We don&apos;t measure streaks.
               We measure moments.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:max-w-md">
-            {BUILT_DIFFERENTLY_TAGS.map((tag) => (
-              <span
-                key={tag}
-                className="label-mono rounded-full border border-surface-border px-4 py-1.5 text-center uppercase text-foreground"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="mx-auto mt-24 max-w-4xl rounded-3xl border border-surface-border px-6 py-10 md:px-12 md:py-14">
-          <h2 className="heading-2 text-center text-foreground">
-            Frequently Asked Questions
-          </h2>
-          <p className="body-lg mx-auto mt-8 max-w-[550px] text-center text-foreground-muted">
-            Straight answers on how Arcilla works, what happens to your voice, and
-            what makes this different.
-          </p>
-
-          <div className="mt-12 divide-y divide-dashed divide-surface-border border-y border-dashed border-surface-border">
-            {FAQ_ITEMS.map((item) => (
-              <details key={item.question} className="group py-8 md:py-10">
-                <summary className="heading-4 flex cursor-pointer list-none items-center justify-between gap-6 text-foreground [&::-webkit-details-marker]:hidden">
-                  <span>{item.question}</span>
+          <div className="flex flex-col gap-3 md:flex-row md:flex-nowrap md:items-center md:gap-0">
+            {BUILT_DIFFERENTLY_TAGS.map((tag, index) => (
+              <Fragment key={tag}>
+                {index > 0 && (
                   <span
-                    className="shrink-0 text-xl leading-none text-foreground-muted transition-transform duration-200 group-open:rotate-45"
+                    className="built-differently-connector hidden h-px w-8 shrink-0 bg-surface-border md:block"
                     aria-hidden="true"
-                  >
-                    +
-                  </span>
-                </summary>
-                <p className="body-lg mt-6 text-foreground-muted">{item.answer}</p>
-              </details>
+                  />
+                )}
+                <span className="built-differently-tag label-mono shrink-0 rounded-[4px] border border-white px-4 py-1.5 text-foreground">
+                  {tag}
+                </span>
+              </Fragment>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-10">
-          <Image
-            src="/brand/footer-wordmark.png"
-            alt="Arcilla"
-            width={2400}
-            height={400}
-            className="h-auto w-full"
-          />
+      {/* FAQ */}
+      <section className="mx-auto w-full px-6 pb-24 lg:pb-32">
+        <div className="mx-auto w-full max-w-[min(1296px,calc(100vw-48px))] rounded-3xl border border-surface-border px-6 pt-[174px] pb-[174px] md:px-12">
+          <h2 className="heading-2 text-center text-foreground">
+            Frequently Asked Questions
+          </h2>
+          <p className="body-lg mx-auto mt-2 max-w-[550px] text-center text-foreground-muted">
+            Straight answers on how Arcilla works, what happens to your voice, and
+            what makes this different.
+          </p>
+
+          <FaqList items={FAQ_ITEMS} />
         </div>
-        <p className="body-sm absolute right-6 bottom-6 text-foreground-subtle lg:right-10 lg:bottom-8">
-          &copy; All rights reserved.
-        </p>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-16 md:py-24">
+        <div className="mx-auto w-full px-6">
+          <div className="mx-auto w-full max-w-[min(1296px,calc(100vw-48px))]">
+            <Image
+              src="/brand/footer-wordmark.png"
+              alt="Arcilla"
+              width={1024}
+              height={219}
+              className="h-auto w-full"
+            />
+            <p className="body-sm mt-6 text-right text-foreground-subtle md:mt-8">
+              &copy; All rights reserved.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );
