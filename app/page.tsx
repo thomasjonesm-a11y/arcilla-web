@@ -15,6 +15,8 @@ import {
   RealTeachingIllustration,
 } from "@/components/illustrations";
 
+const WAITLIST_COLLAPSE_MS = 350;
+
 function EarlyAccessIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -56,37 +58,67 @@ function BuildRealIcon() {
   );
 }
 
-function NavWaitlist({
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useLayoutEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 640px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  return isMobile;
+}
+
+function NavWaitlistMobile({
   email,
   onEmailChange,
   onSubmit,
+  onExpandedChange,
 }: {
   email: string;
   onEmailChange: (value: string) => void;
   onSubmit: () => void;
+  onExpandedChange: (expanded: boolean) => void;
 }) {
-  const MIN_EXPANDED_WIDTH = 396;
-  const MAX_EXPANDED_WIDTH = 560;
-  const COLLAPSED_PADDING = 12;
-
   const [expanded, setExpanded] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [compactWidth, setCompactWidth] = useState(184);
-  const [expandedWidth, setExpandedWidth] = useState(MIN_EXPANDED_WIDTH);
+  const [collapsingToJoin, setCollapsingToJoin] = useState(false);
+  const [joinCompactWidth, setJoinCompactWidth] = useState(200);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const measureRef = useRef<HTMLSpanElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const joinRef = useRef<HTMLButtonElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const collapseTimerRef = useRef<number | null>(null);
 
   function collapse() {
+    if (collapseTimerRef.current) return;
+
+    if (submitted && expanded) {
+      setCollapsingToJoin(true);
+      onExpandedChange(false);
+      collapseTimerRef.current = window.setTimeout(() => {
+        setExpanded(false);
+        setSubmitted(false);
+        setCollapsingToJoin(false);
+        collapseTimerRef.current = null;
+      }, WAITLIST_COLLAPSE_MS);
+      return;
+    }
+
     setExpanded(false);
     setSubmitted(false);
+    onExpandedChange(false);
   }
 
   function expand() {
     setExpanded(true);
     setSubmitted(false);
+    onExpandedChange(true);
   }
 
   function handleSubmitClick() {
@@ -100,36 +132,23 @@ function NavWaitlist({
     setSubmitted(true);
   }
 
+  useEffect(() => {
+    return () => {
+      onExpandedChange(false);
+      if (collapseTimerRef.current) {
+        window.clearTimeout(collapseTimerRef.current);
+      }
+    };
+  }, [onExpandedChange]);
+
   useLayoutEffect(() => {
     if (!measureRef.current) return;
 
-    measureRef.current.textContent = "You're on the list";
-    const successTextWidth = measureRef.current.getBoundingClientRect().width;
-    const successChrome = 16 + 8 + 24;
-
-    setCompactWidth(
-      Math.ceil(successTextWidth + successChrome + COLLAPSED_PADDING),
+    measureRef.current.textContent = "Join the waitlist";
+    setJoinCompactWidth(
+      Math.ceil(measureRef.current.getBoundingClientRect().width + 60),
     );
   }, []);
-
-  useLayoutEffect(() => {
-    if (!expanded || submitted || !measureRef.current) return;
-
-    const text = email || "Your email address";
-    measureRef.current.textContent = text;
-    const textWidth = measureRef.current.getBoundingClientRect().width;
-    const buttonWidth = buttonRef.current?.offsetWidth ?? 36;
-    const chrome = 36;
-
-    setExpandedWidth(
-      Math.min(
-        MAX_EXPANDED_WIDTH,
-        Math.max(MIN_EXPANDED_WIDTH, Math.ceil(textWidth + buttonWidth + chrome)),
-      ),
-    );
-  }, [email, expanded, submitted]);
-
-  const pillWidth = !expanded || submitted ? compactWidth : expandedWidth;
 
   useEffect(() => {
     setSubmitted(false);
@@ -168,7 +187,277 @@ function NavWaitlist({
     };
   }, [expanded]);
 
-  const joinContentClass = expanded ? "" : "cursor-pointer";
+  if (!expanded && !collapsingToJoin) {
+    return (
+      <>
+        <span
+          ref={measureRef}
+          className="pointer-events-none invisible absolute whitespace-pre text-sm"
+          aria-hidden="true"
+        />
+        <button
+          type="button"
+          onClick={expand}
+          className="cursor-pointer rounded-full border border-pill-border px-[30px] py-[13px] text-sm text-foreground"
+        >
+          Join the waitlist
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <span
+        ref={measureRef}
+        className="pointer-events-none invisible absolute whitespace-pre text-sm"
+        aria-hidden="true"
+      />
+      <div
+        ref={containerRef}
+        data-expanded={expanded}
+        data-submitted={submitted}
+        data-collapsing-to-join={collapsingToJoin}
+        className="nav-waitlist-mobile absolute inset-y-0 left-0 right-0 z-20 flex items-center"
+      >
+        <div
+          className={`nav-waitlist-mobile-pill ${collapsingToJoin ? "" : "w-full"} ${expanded && !collapsingToJoin ? "nav-waitlist-mobile-pill--entering" : ""}`}
+          style={
+            collapsingToJoin
+              ? {
+                  width: joinCompactWidth,
+                  maxWidth: joinCompactWidth,
+                  marginLeft: "auto",
+                }
+              : undefined
+          }
+        >
+          <button
+            type="button"
+            onClick={expand}
+            aria-hidden={expanded && !collapsingToJoin}
+            tabIndex={expanded && !collapsingToJoin ? -1 : 0}
+            className={`nav-waitlist-mobile-join px-[30px] py-[13px] text-sm text-foreground ${expanded && !collapsingToJoin ? "" : "cursor-pointer"}`}
+          >
+            Join the waitlist
+          </button>
+          <div className="nav-waitlist-mobile-field">
+          <div
+            className={`nav-waitlist-mobile-form ${submitted ? "is-hidden" : "is-visible"}`}
+          >
+            <input
+              ref={inputRef}
+              type="email"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => onEmailChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSubmitClick();
+                }
+              }}
+              placeholder="Your email address"
+              className="min-w-0 flex-1 bg-transparent px-3 py-1.5 text-sm text-foreground outline-none placeholder:text-foreground-subtle"
+            />
+            <button
+              ref={buttonRef}
+              type="button"
+              onClick={handleSubmitClick}
+              aria-label="Get notified"
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-transparent text-foreground transition-colors duration-200 ease-in-out hover:border-foreground/60 hover:bg-[rgba(255,255,255,0.08)]"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 8H13M13 8L9 4M13 8L9 12"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <div
+            className={`nav-waitlist-mobile-success text-sm text-foreground ${submitted ? "is-visible" : "is-hidden"}`}
+            aria-live="polite"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M3.5 8.25L6.5 11.25L12.5 4.75"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>You&apos;re on the list</span>
+          </div>
+        </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function NavWaitlistDesktop({
+  email,
+  onEmailChange,
+  onSubmit,
+}: {
+  email: string;
+  onEmailChange: (value: string) => void;
+  onSubmit: () => void;
+}) {
+  const MIN_EXPANDED_WIDTH = 396;
+  const MAX_EXPANDED_WIDTH = 560;
+  const COLLAPSED_PADDING = 12;
+
+  const [expanded, setExpanded] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [collapsingToJoin, setCollapsingToJoin] = useState(false);
+  const [joinCompactWidth, setJoinCompactWidth] = useState(184);
+  const [successCompactWidth, setSuccessCompactWidth] = useState(184);
+  const [expandedWidth, setExpandedWidth] = useState(MIN_EXPANDED_WIDTH);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const joinRef = useRef<HTMLButtonElement>(null);
+  const collapseTimerRef = useRef<number | null>(null);
+
+  function collapse() {
+    if (collapseTimerRef.current) return;
+
+    if (submitted && expanded) {
+      setCollapsingToJoin(true);
+      collapseTimerRef.current = window.setTimeout(() => {
+        setExpanded(false);
+        setSubmitted(false);
+        setCollapsingToJoin(false);
+        collapseTimerRef.current = null;
+      }, WAITLIST_COLLAPSE_MS);
+      return;
+    }
+
+    setExpanded(false);
+    setSubmitted(false);
+  }
+
+  function expand() {
+    setExpanded(true);
+    setSubmitted(false);
+  }
+
+  function handleSubmitClick() {
+    if (!isValidEmail(email)) return;
+
+    if (buttonRef.current) {
+      fireWaitlistConfetti(buttonRef.current);
+    }
+
+    onSubmit();
+    setSubmitted(true);
+  }
+
+  useLayoutEffect(() => {
+    if (!measureRef.current) return;
+
+    measureRef.current.textContent = "Join the waitlist";
+    const joinTextWidth = measureRef.current.getBoundingClientRect().width;
+    setJoinCompactWidth(Math.ceil(joinTextWidth + 24 + COLLAPSED_PADDING));
+
+    measureRef.current.textContent = "You're on the list";
+    const successTextWidth = measureRef.current.getBoundingClientRect().width;
+    const successChrome = 16 + 8 + 24;
+
+    setSuccessCompactWidth(
+      Math.ceil(successTextWidth + successChrome + COLLAPSED_PADDING),
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!expanded || submitted || !measureRef.current) return;
+
+    const text = email || "Your email address";
+    measureRef.current.textContent = text;
+    const textWidth = measureRef.current.getBoundingClientRect().width;
+    const buttonWidth = buttonRef.current?.offsetWidth ?? 36;
+    const chrome = 36;
+
+    setExpandedWidth(
+      Math.min(
+        MAX_EXPANDED_WIDTH,
+        Math.max(MIN_EXPANDED_WIDTH, Math.ceil(textWidth + buttonWidth + chrome)),
+      ),
+    );
+  }, [email, expanded, submitted]);
+
+  const pillWidth = collapsingToJoin || !expanded
+    ? joinCompactWidth
+    : submitted
+      ? successCompactWidth
+      : expandedWidth;
+
+  useEffect(() => {
+    return () => {
+      if (collapseTimerRef.current) {
+        window.clearTimeout(collapseTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    setSubmitted(false);
+  }, [email]);
+
+  useEffect(() => {
+    if (expanded) {
+      inputRef.current?.focus();
+    }
+  }, [expanded]);
+
+  useEffect(() => {
+    if (!expanded) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        collapse();
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        collapse();
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [expanded]);
+
+  const joinContentClass =
+    expanded && !collapsingToJoin ? "" : "cursor-pointer";
 
   return (
     <div ref={containerRef} className="relative">
@@ -180,6 +469,7 @@ function NavWaitlist({
       <div
         data-expanded={expanded}
         data-submitted={submitted}
+        data-collapsing-to-join={collapsingToJoin}
         style={{
           width: pillWidth,
           maxWidth: pillWidth,
@@ -190,8 +480,8 @@ function NavWaitlist({
           ref={joinRef}
           type="button"
           onClick={expand}
-          aria-hidden={expanded}
-          tabIndex={expanded ? -1 : 0}
+          aria-hidden={expanded && !collapsingToJoin}
+          tabIndex={expanded && !collapsingToJoin ? -1 : 0}
           className={`nav-waitlist-join px-3 py-[13px] text-sm text-foreground ${joinContentClass}`}
         >
           Join the waitlist
@@ -203,6 +493,8 @@ function NavWaitlist({
             <input
               ref={inputRef}
               type="email"
+              name="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => onEmailChange(e.target.value)}
               onKeyDown={(e) => {
@@ -263,6 +555,39 @@ function NavWaitlist({
         </div>
       </div>
     </div>
+  );
+}
+
+function NavWaitlist({
+  email,
+  onEmailChange,
+  onSubmit,
+  onMobileExpandedChange,
+}: {
+  email: string;
+  onEmailChange: (value: string) => void;
+  onSubmit: () => void;
+  onMobileExpandedChange: (expanded: boolean) => void;
+}) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <NavWaitlistMobile
+        email={email}
+        onEmailChange={onEmailChange}
+        onSubmit={onSubmit}
+        onExpandedChange={onMobileExpandedChange}
+      />
+    );
+  }
+
+  return (
+    <NavWaitlistDesktop
+      email={email}
+      onEmailChange={onEmailChange}
+      onSubmit={onSubmit}
+    />
   );
 }
 
@@ -499,6 +824,7 @@ const FEATURE_CARDS = [
 
 export default function Home() {
   const [email, setEmail] = useState("");
+  const [mobileNavExpanded, setMobileNavExpanded] = useState(false);
 
   function handleSubmit() {
     console.log(email);
@@ -507,20 +833,29 @@ export default function Home() {
   return (
     <div className="bg-background">
       <header className="site-header sticky top-0 z-50">
-        <div className="mx-auto w-full px-6">
-          <div className="mx-auto flex w-full max-w-[min(1296px,calc(100vw-48px))] items-center justify-between py-8">
+        <div className="relative mx-auto w-full px-4 sm:px-6">
+          <div className="relative mx-auto flex w-full max-w-[min(1296px,calc(100vw-48px))] items-center justify-between py-[15px]">
+            <Image
+              src="/brand/logo-mark.png"
+              alt="Arcilla"
+              width={48}
+              height={48}
+              className={`h-12 w-12 transition-opacity duration-300 ease-in-out sm:hidden ${mobileNavExpanded ? "pointer-events-none opacity-0" : "opacity-100"}`}
+              priority
+            />
             <Image
               src="/brand/logo.png"
               alt="Arcilla"
               width={140}
               height={32}
-              className="h-8 w-auto"
+              className="hidden h-8 w-auto sm:block"
               priority
             />
             <NavWaitlist
               email={email}
               onEmailChange={setEmail}
               onSubmit={handleSubmit}
+              onMobileExpandedChange={setMobileNavExpanded}
             />
           </div>
         </div>
