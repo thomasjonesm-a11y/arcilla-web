@@ -6,6 +6,7 @@ import {
   fireWaitlistConfetti,
   isValidEmail,
 } from "@/lib/waitlist-celebration";
+import { submitToWaitlist } from "@/lib/waitlist";
 import {
   HeroIllustration,
   SkillsDiagram,
@@ -58,6 +59,26 @@ function BuildRealIcon() {
   );
 }
 
+function WaitlistSuccessIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M3.5 8.25L6.5 11.25L12.5 4.75"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -74,19 +95,109 @@ function useIsMobile() {
   return isMobile;
 }
 
+function HeroWaitlistForm({
+  email,
+  onEmailChange,
+}: {
+  email: string;
+  onEmailChange: (value: string) => void;
+}) {
+  const [submitted, setSubmitted] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("You're on the list");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitRef = useRef<HTMLButtonElement>(null);
+
+  async function handleSubmit() {
+    if (!isValidEmail(email) || isSubmitting) return;
+
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    const result = await submitToWaitlist(email);
+    setIsSubmitting(false);
+
+    if (result.success) {
+      if (submitRef.current) {
+        fireWaitlistConfetti(submitRef.current);
+      }
+      setSuccessMessage(result.message);
+      setSubmitted(true);
+      return;
+    }
+
+    setErrorMessage(result.message);
+  }
+
+  useEffect(() => {
+    setSubmitted(false);
+    setErrorMessage(null);
+    setSuccessMessage("You're on the list");
+  }, [email]);
+
+  if (submitted) {
+    return (
+      <div
+        id="waitlist-form"
+        className="mt-8 mb-[100px] flex w-full max-w-md items-center justify-center gap-2 rounded-full border border-pill-border px-5 py-3 text-sm text-foreground"
+        aria-live="polite"
+      >
+        <WaitlistSuccessIcon />
+        <span>{successMessage}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div id="waitlist-form" className="relative mt-8 mb-[100px] w-full max-w-md">
+      <div className="flex w-full items-center rounded-full border border-pill-border p-1.5">
+        <input
+          type="email"
+          name="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => onEmailChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              void handleSubmit();
+            }
+          }}
+          placeholder="Your email address"
+          className="min-w-0 flex-1 bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-foreground-subtle"
+        />
+        <button
+          ref={submitRef}
+          type="button"
+          onClick={() => void handleSubmit()}
+          disabled={isSubmitting}
+          className="shrink-0 rounded-full bg-foreground px-5 py-2 text-sm text-background disabled:opacity-60"
+        >
+          Get Notified
+        </button>
+      </div>
+      {errorMessage && (
+        <p className="mt-2 text-center text-xs text-[#E5484D]" role="alert">
+          {errorMessage}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function NavWaitlistMobile({
   email,
   onEmailChange,
-  onSubmit,
   onExpandedChange,
 }: {
   email: string;
   onEmailChange: (value: string) => void;
-  onSubmit: () => void;
   onExpandedChange: (expanded: boolean) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("You're on the list");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [collapsingToJoin, setCollapsingToJoin] = useState(false);
   const [joinCompactWidth, setJoinCompactWidth] = useState(200);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -121,15 +232,25 @@ function NavWaitlistMobile({
     onExpandedChange(true);
   }
 
-  function handleSubmitClick() {
-    if (!isValidEmail(email)) return;
+  async function handleSubmitClick() {
+    if (!isValidEmail(email) || isSubmitting) return;
 
-    if (buttonRef.current) {
-      fireWaitlistConfetti(buttonRef.current);
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    const result = await submitToWaitlist(email);
+    setIsSubmitting(false);
+
+    if (result.success) {
+      if (buttonRef.current) {
+        fireWaitlistConfetti(buttonRef.current);
+      }
+      setSuccessMessage(result.message);
+      setSubmitted(true);
+      return;
     }
 
-    onSubmit();
-    setSubmitted(true);
+    setErrorMessage(result.message);
   }
 
   useEffect(() => {
@@ -152,6 +273,8 @@ function NavWaitlistMobile({
 
   useEffect(() => {
     setSubmitted(false);
+    setErrorMessage(null);
+    setSuccessMessage("You're on the list");
   }, [email]);
 
   useEffect(() => {
@@ -254,7 +377,7 @@ function NavWaitlistMobile({
               onChange={(e) => onEmailChange(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  handleSubmitClick();
+                  void handleSubmitClick();
                 }
               }}
               placeholder="Your email address"
@@ -263,9 +386,10 @@ function NavWaitlistMobile({
             <button
               ref={buttonRef}
               type="button"
-              onClick={handleSubmitClick}
+              onClick={() => void handleSubmitClick()}
+              disabled={isSubmitting}
               aria-label="Get notified"
-              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-transparent text-foreground transition-colors duration-200 ease-in-out hover:border-foreground/60 hover:bg-[rgba(255,255,255,0.08)]"
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[rgba(255,255,255,0.35)] bg-transparent text-foreground transition-colors duration-200 ease-in-out hover:border-foreground/60 hover:bg-[rgba(255,255,255,0.08)] disabled:opacity-60"
             >
               <svg
                 width="16"
@@ -288,25 +412,19 @@ function NavWaitlistMobile({
             className={`nav-waitlist-mobile-success text-sm text-foreground ${submitted ? "is-visible" : "is-hidden"}`}
             aria-live="polite"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M3.5 8.25L6.5 11.25L12.5 4.75"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span>You&apos;re on the list</span>
+            <WaitlistSuccessIcon />
+            <span>{successMessage}</span>
           </div>
         </div>
         </div>
+        {errorMessage && (
+          <p
+            className="absolute top-full right-0 mt-2 text-xs text-[#E5484D]"
+            role="alert"
+          >
+            {errorMessage}
+          </p>
+        )}
       </div>
     </>
   );
@@ -315,11 +433,9 @@ function NavWaitlistMobile({
 function NavWaitlistDesktop({
   email,
   onEmailChange,
-  onSubmit,
 }: {
   email: string;
   onEmailChange: (value: string) => void;
-  onSubmit: () => void;
 }) {
   const MIN_EXPANDED_WIDTH = 396;
   const MAX_EXPANDED_WIDTH = 560;
@@ -327,6 +443,9 @@ function NavWaitlistDesktop({
 
   const [expanded, setExpanded] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("You're on the list");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [collapsingToJoin, setCollapsingToJoin] = useState(false);
   const [joinCompactWidth, setJoinCompactWidth] = useState(184);
   const [successCompactWidth, setSuccessCompactWidth] = useState(184);
@@ -361,15 +480,25 @@ function NavWaitlistDesktop({
     setSubmitted(false);
   }
 
-  function handleSubmitClick() {
-    if (!isValidEmail(email)) return;
+  async function handleSubmitClick() {
+    if (!isValidEmail(email) || isSubmitting) return;
 
-    if (buttonRef.current) {
-      fireWaitlistConfetti(buttonRef.current);
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    const result = await submitToWaitlist(email);
+    setIsSubmitting(false);
+
+    if (result.success) {
+      if (buttonRef.current) {
+        fireWaitlistConfetti(buttonRef.current);
+      }
+      setSuccessMessage(result.message);
+      setSubmitted(true);
+      return;
     }
 
-    onSubmit();
-    setSubmitted(true);
+    setErrorMessage(result.message);
   }
 
   useLayoutEffect(() => {
@@ -379,7 +508,7 @@ function NavWaitlistDesktop({
     const joinTextWidth = measureRef.current.getBoundingClientRect().width;
     setJoinCompactWidth(Math.ceil(joinTextWidth + 24 + COLLAPSED_PADDING));
 
-    measureRef.current.textContent = "You're on the list";
+    measureRef.current.textContent = "You're already on the list";
     const successTextWidth = measureRef.current.getBoundingClientRect().width;
     const successChrome = 16 + 8 + 24;
 
@@ -387,6 +516,18 @@ function NavWaitlistDesktop({
       Math.ceil(successTextWidth + successChrome + COLLAPSED_PADDING),
     );
   }, []);
+
+  useLayoutEffect(() => {
+    if (!submitted || !measureRef.current) return;
+
+    measureRef.current.textContent = successMessage;
+    const successTextWidth = measureRef.current.getBoundingClientRect().width;
+    const successChrome = 16 + 8 + 24;
+
+    setSuccessCompactWidth(
+      Math.ceil(successTextWidth + successChrome + COLLAPSED_PADDING),
+    );
+  }, [submitted, successMessage]);
 
   useLayoutEffect(() => {
     if (!expanded || submitted || !measureRef.current) return;
@@ -421,6 +562,8 @@ function NavWaitlistDesktop({
 
   useEffect(() => {
     setSubmitted(false);
+    setErrorMessage(null);
+    setSuccessMessage("You're on the list");
   }, [email]);
 
   useEffect(() => {
@@ -499,7 +642,7 @@ function NavWaitlistDesktop({
               onChange={(e) => onEmailChange(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  handleSubmitClick();
+                  void handleSubmitClick();
                 }
               }}
               placeholder="Your email address"
@@ -509,10 +652,11 @@ function NavWaitlistDesktop({
             <button
               ref={buttonRef}
               type="button"
-              onClick={handleSubmitClick}
+              onClick={() => void handleSubmitClick()}
+              disabled={isSubmitting}
               aria-label="Get notified"
               tabIndex={expanded && !submitted ? 0 : -1}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[rgba(255,255,255,0.3)] bg-transparent text-foreground transition-colors duration-200 ease-in-out hover:border-foreground/60 hover:bg-[rgba(255,255,255,0.08)]"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[rgba(255,255,255,0.3)] bg-transparent text-foreground transition-colors duration-200 ease-in-out hover:border-foreground/60 hover:bg-[rgba(255,255,255,0.08)] disabled:opacity-60"
             >
               <svg
                 width="16"
@@ -535,25 +679,19 @@ function NavWaitlistDesktop({
             className={`nav-waitlist-success text-sm text-foreground ${submitted ? "is-visible" : "is-hidden"}`}
             aria-live="polite"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M3.5 8.25L6.5 11.25L12.5 4.75"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span>You&apos;re on the list</span>
+            <WaitlistSuccessIcon />
+            <span>{successMessage}</span>
           </div>
         </div>
       </div>
+      {errorMessage && (
+        <p
+          className="absolute top-full right-0 mt-2 whitespace-nowrap text-xs text-[#E5484D]"
+          role="alert"
+        >
+          {errorMessage}
+        </p>
+      )}
     </div>
   );
 }
@@ -561,12 +699,10 @@ function NavWaitlistDesktop({
 function NavWaitlist({
   email,
   onEmailChange,
-  onSubmit,
   onMobileExpandedChange,
 }: {
   email: string;
   onEmailChange: (value: string) => void;
-  onSubmit: () => void;
   onMobileExpandedChange: (expanded: boolean) => void;
 }) {
   const isMobile = useIsMobile();
@@ -576,7 +712,6 @@ function NavWaitlist({
       <NavWaitlistMobile
         email={email}
         onEmailChange={onEmailChange}
-        onSubmit={onSubmit}
         onExpandedChange={onMobileExpandedChange}
       />
     );
@@ -586,7 +721,6 @@ function NavWaitlist({
     <NavWaitlistDesktop
       email={email}
       onEmailChange={onEmailChange}
-      onSubmit={onSubmit}
     />
   );
 }
@@ -826,10 +960,6 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [mobileNavExpanded, setMobileNavExpanded] = useState(false);
 
-  function handleSubmit() {
-    console.log(email);
-  }
-
   return (
     <div className="bg-background">
       <header className="site-header sticky top-0 z-50">
@@ -854,7 +984,6 @@ export default function Home() {
             <NavWaitlist
               email={email}
               onEmailChange={setEmail}
-              onSubmit={handleSubmit}
               onMobileExpandedChange={setMobileNavExpanded}
             />
           </div>
@@ -871,13 +1000,15 @@ export default function Home() {
           Years of streaks and still can&apos;t hold a conversation.
         </h1>
 
-        <p className="body-lg mx-auto mb-[100px] mt-4 max-w-[550px] text-center text-foreground-muted">
+        <p className="body-lg mx-auto mt-4 mb-8 max-w-[550px] text-center text-foreground-muted sm:mb-0">
           Arcilla teaches Spanish the way you&apos;ll actually use it: out loud,
           under pressure, with someone talking back. Join the waitlist. One email
           when it&apos;s ready.
         </p>
 
-        <div className="w-full max-w-[1000px]">
+        <HeroWaitlistForm email={email} onEmailChange={setEmail} />
+
+        <div className="w-full max-w-[1000px] sm:mt-[100px]">
           <HeroIllustration className="h-auto w-full" />
         </div>
       </section>
