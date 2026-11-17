@@ -1,16 +1,16 @@
-// Hero illustration — phone mockup with floating conversation moments.
-// Asset: public/illustrations/illo_header.png
+// Hero illustration — vector mockup (scales crisply at any width).
+// Asset: public/illustrations/group-5969.svg
 
 import Image from "next/image";
 
 export default function HeroIllustration({
   className,
-  src = "/illustrations/illo_header.png",
+  src = "/illustrations/group-5969.svg",
   priority = true,
   ...props
 }) {
-  const WIDTH = 1024;
-  const HEIGHT = 547;
+  const WIDTH = 1263;
+  const HEIGHT = 670;
 
   return (
     <Image
@@ -19,6 +19,7 @@ export default function HeroIllustration({
       width={WIDTH}
       height={HEIGHT}
       priority={priority}
+      sizes="(max-width: 1000px) 100vw, 1000px"
       className={className}
       unoptimized={src.endsWith(".svg")}
       {...props}
