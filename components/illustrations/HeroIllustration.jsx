@@ -1,16 +1,16 @@
 // Hero illustration — vector mockup (scales crisply at any width).
-// Asset: public/illustrations/group-5969.svg
+// Asset: public/illustrations/mockup-header-arcilla.svg
 
 import Image from "next/image";
 
 export default function HeroIllustration({
   className,
-  src = "/illustrations/group-5969.svg",
+  src = "/illustrations/mockup-header-arcilla.svg",
   priority = true,
   ...props
 }) {
-  const WIDTH = 1263;
-  const HEIGHT = 670;
+  const WIDTH = 1407;
+  const HEIGHT = 752;
 
   return (
     <Image
